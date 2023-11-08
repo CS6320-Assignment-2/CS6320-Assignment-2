@@ -31,13 +31,13 @@ class RNN(nn.Module):
 
     def forward(self, inputs):
         # [to fill] obtain hidden layer representation (https://pytorch.org/docs/stable/generated/torch.nn.RNN.html)
-        _, hidden = 
+        _, hidden = self.rnn(inputs)
         # [to fill] obtain output layer representations
-
+        output_layer_representation = self.W(hidden[-1])
         # [to fill] sum over output 
-
+        summed_output = torch.sum(output_layer_representation, dim=0, keepdim=True)
         # [to fill] obtain probability dist.
-
+        predicted_vector = self.softmax(summed_output)
         return predicted_vector
 
 
@@ -58,10 +58,10 @@ def load_data(train_data, val_data):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("-hd", "--hidden_dim", type=int, required = True, help = "hidden_dim")
-    parser.add_argument("-e", "--epochs", type=int, required = True, help = "num of epochs to train")
-    parser.add_argument("--train_data", required = True, help = "path to training data")
-    parser.add_argument("--val_data", required = True, help = "path to validation data")
+    parser.add_argument("-hd", "--hidden_dim", type=int, default=32, help = "hidden_dim")
+    parser.add_argument("-e", "--epochs", type=int, default=10, help = "num of epochs to train")
+    parser.add_argument("--train_data", default="training.json", help = "path to training data")
+    parser.add_argument("--val_data", default="validation.json", help = "path to validation data")
     parser.add_argument("--test_data", default = "to fill", help = "path to test data")
     parser.add_argument('--do_train', action='store_true')
     args = parser.parse_args()

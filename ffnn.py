@@ -32,11 +32,11 @@ class FFNN(nn.Module):
 
     def forward(self, input_vector):
         # [to fill] obtain first hidden layer representation
-
+        h1 = self.activation(self.W1(input_vector))
         # [to fill] obtain output layer representation
-
+        logits = self.W2(h1)
         # [to fill] obtain probability dist.
-
+        predicted_vector = self.softmax(logits)
         return predicted_vector
 
 
@@ -98,10 +98,10 @@ def load_data(train_data, val_data):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("-hd", "--hidden_dim", type=int, required = True, help = "hidden_dim")
-    parser.add_argument("-e", "--epochs", type=int, required = True, help = "num of epochs to train")
-    parser.add_argument("--train_data", required = True, help = "path to training data")
-    parser.add_argument("--val_data", required = True, help = "path to validation data")
+    parser.add_argument("-hd", "--hidden_dim", type=int, default=10, help = "hidden_dim")
+    parser.add_argument("-e", "--epochs", type=int, default=1, help = "num of epochs to train")
+    parser.add_argument("--train_data", default="training.json", help = "path to training data")
+    parser.add_argument("--val_data", default="validation.json", help = "path to validation data")
     parser.add_argument("--test_data", default = "to fill", help = "path to test data")
     parser.add_argument('--do_train', action='store_true')
     args = parser.parse_args()
