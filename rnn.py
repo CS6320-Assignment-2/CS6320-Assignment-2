@@ -17,14 +17,28 @@ unk = '<UNK>'
 # Consult the PyTorch documentation for information on the functions used below:
 # https://pytorch.org/docs/stable/torch.html
 class RNN(nn.Module):
-    def __init__(self, input_dim, h):  # Add relevant parameters
+    def __init__(self, input_dim, h, num_layers, init):  # Add relevant parameters
         super(RNN, self).__init__()
         self.h = h
-        self.numOfLayer = 1
+        self.numOfLayer = num_layers
         self.rnn = nn.RNN(input_dim, h, self.numOfLayer, nonlinearity='tanh')
         self.W = nn.Linear(h, 5)
         self.softmax = nn.LogSoftmax(dim=1)
         self.loss = nn.NLLLoss()
+        
+        # Weight initialization
+        if init == "xavier":
+            for name, param in self.rnn.named_parameters():
+                if 'weight_ih' in name:
+                    torch.nn.init.xavier_normal_(param.data)
+                elif 'weight_hh' in name:
+                    torch.nn.init.xavier_normal_(param.data)
+        elif init == "kaiming":
+            for name, param in self.rnn.named_parameters():
+                if 'weight_ih' in name:
+                    torch.nn.init.kaiming_normal_(param.data)
+                elif 'weight_hh' in name:
+                    torch.nn.init.kaiming_normal_(param.data)
 
     def compute_Loss(self, predicted_vector, gold_label):
         return self.loss(predicted_vector, gold_label)
@@ -63,6 +77,8 @@ if __name__ == "__main__":
     parser.add_argument("--train_data", default="training.json", help = "path to training data")
     parser.add_argument("--val_data", default="validation.json", help = "path to validation data")
     parser.add_argument("--test_data", default = "to fill", help = "path to test data")
+    parser.add_argument("--num_layers", type=int, default=1, help = "number of layers in the RNN")
+    parser.add_argument("--init", type=str, default="default", choices=["default", "xavier", "kaiming"], help = "Method to initialize weights")
     parser.add_argument('--do_train', action='store_true')
     args = parser.parse_args()
 
@@ -77,7 +93,7 @@ if __name__ == "__main__":
     # Option 3 will be the most time consuming, so we do not recommend starting with this
 
     print("========== Vectorizing data ==========")
-    model = RNN(50, args.hidden_dim)  # Fill in parameters
+    model = RNN(50, args.hidden_dim, args.num_layers, args.init)  # Fill in parameters
     # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
     optimizer = optim.Adam(model.parameters(), lr=0.01)
     word_embedding = pickle.load(open('./word_embedding.pkl', 'rb'))
@@ -88,7 +104,7 @@ if __name__ == "__main__":
     last_train_accuracy = 0
     last_validation_accuracy = 0
 
-    while not stopping_condition:
+    while not stopping_condition and epoch<args.epochs:
         random.shuffle(train_data)
         model.train()
         # You will need further code to operationalize training, ffnn.py may be helpful

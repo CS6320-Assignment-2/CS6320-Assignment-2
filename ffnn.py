@@ -39,6 +39,19 @@ class FFNN(nn.Module):
         predicted_vector = self.softmax(logits)
         return predicted_vector
 
+    def initialize_weights(self, init_type):
+        if init_type == "xavier":
+            for m in self.modules():
+                if isinstance(m, nn.Linear):
+                    init.xavier_uniform_(m.weight)
+                    if m.bias is not None:
+                        init.zeros_(m.bias)
+        elif init_type == "kaiming":
+            for m in self.modules():
+                if isinstance(m, nn.Linear):
+                    init.kaiming_uniform_(m.weight, nonlinearity='relu')
+                    if m.bias is not None:
+                        init.zeros_(m.bias)
 
 # Returns: 
 # vocab = A set of strings corresponding to the vocabulary
@@ -99,10 +112,11 @@ def load_data(train_data, val_data):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-hd", "--hidden_dim", type=int, default=10, help = "hidden_dim")
-    parser.add_argument("-e", "--epochs", type=int, default=1, help = "num of epochs to train")
+    parser.add_argument("-e", "--epochs", type=int, default=10, help = "num of epochs to train")
     parser.add_argument("--train_data", default="training.json", help = "path to training data")
     parser.add_argument("--val_data", default="validation.json", help = "path to validation data")
     parser.add_argument("--test_data", default = "to fill", help = "path to test data")
+    parser.add_argument("--init", type=str, default="default", choices=["default", "xavier", "kaiming"], help = "Method to initialize weights")
     parser.add_argument('--do_train', action='store_true')
     args = parser.parse_args()
 
@@ -122,12 +136,13 @@ if __name__ == "__main__":
     
 
     model = FFNN(input_dim = len(vocab), h = args.hidden_dim)
+    model.initialize_weights(args.init)
     optimizer = optim.SGD(model.parameters(),lr=0.01, momentum=0.9)
     print("========== Training for {} epochs ==========".format(args.epochs))
     for epoch in range(args.epochs):
         model.train()
         optimizer.zero_grad()
-        loss = None
+        loss_all = 0
         correct = 0
         total = 0
         start_time = time.time()
@@ -149,9 +164,11 @@ if __name__ == "__main__":
                     loss = example_loss
                 else:
                     loss += example_loss
+                loss_all += example_loss
             loss = loss / minibatch_size
             loss.backward()
             optimizer.step()
+        print("Training loss for epoch {}".format(loss_all/N))
         print("Training completed for epoch {}".format(epoch + 1))
         print("Training accuracy for epoch {}: {}".format(epoch + 1, correct / total))
         print("Training time for this epoch: {}".format(time.time() - start_time))

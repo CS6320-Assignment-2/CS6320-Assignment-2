@@ -2,3 +2,8 @@ test.json
 training.json
 validation.json
 word_embedding.pkl
+data_statistics.py
+plot_ffnn.py
+plot_rnn.py
+ffnn_results.json
+rnn_results.json
